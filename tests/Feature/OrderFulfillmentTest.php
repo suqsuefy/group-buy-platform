@@ -93,4 +93,34 @@ class OrderFulfillmentTest extends TestCase
         $this->postJson($url,['action'=>'cancel'])->assertUnprocessable();
         $this->assertSame(8,(int)$f['product']->fresh()->stock);
     }
+    public function test_vendor_orders_and_history_are_scoped_to_owners_and_customer(): void
+    {
+        $f=$this->setupOrder();
+        $url='/api/orders/'.$f['order']->id.'/transition';
+        $this->actingAs($f['vendor'],'sanctum')->postJson($url,['action'=>'process'])->assertOk();
+        $this->getJson('/api/vendor/orders')->assertOk()->assertJsonCount(1,'data');
+        $this->getJson('/api/orders/'.$f['order']->id.'/history')->assertOk()
+            ->assertJsonCount(1)->assertJsonPath('0.action','process')
+            ->assertJsonPath('0.actor_id',$f['vendor']->id);
+        $this->actingAs($f['customer'],'sanctum')->getJson('/api/orders/'.$f['order']->id.'/history')->assertOk();
+        $this->getJson('/api/vendor/orders')->assertOk()->assertJsonCount(0,'data');
+        $outsider=User::create(['name'=>'Outsider','email'=>'outsider@example.test','phone'=>'01000000009','password'=>bcrypt('password123'),'role'=>'vendor','status'=>'active']);
+        $this->actingAs($outsider,'sanctum')->getJson('/api/orders/'.$f['order']->id.'/history')->assertForbidden();
+    }
+
+    public function test_audit_log_records_collection_without_duplicate_event(): void
+    {
+        $f=$this->setupOrder();
+        $url='/api/orders/'.$f['order']->id.'/transition';
+        $this->actingAs($f['vendor'],'sanctum')->postJson($url,['action'=>'process'])->assertOk();
+        $this->postJson($url,['action'=>'ship','delivery_reference'=>'TRACK-01'])->assertOk();
+        $this->postJson($url,['action'=>'deliver'])->assertOk();
+        $collect='/api/admin/orders/'.$f['order']->id.'/collect-cod';
+        $this->actingAs($f['admin'],'sanctum')->postJson($collect)->assertOk();
+        $this->postJson($collect)->assertUnprocessable();
+        $this->assertDatabaseCount('order_events',4);
+        $this->assertDatabaseHas('order_events',['order_id'=>$f['order']->id,'actor_id'=>$f['admin']->id,'action'=>'collect_cod','from_status'=>'delivered','to_status'=>'delivered']);
+    }
+
+
 }

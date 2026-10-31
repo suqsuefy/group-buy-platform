@@ -52,7 +52,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
    const Text('الطلبات متاحة فقط بعد تأكيد اكتمال الحملة. الدفع عند الاستلام.'),
    const SizedBox(height:12),
    if(addresses.isNotEmpty) DropdownButtonFormField<int>(
-    value:addressId,
+    initialValue:addressId,
     items:addresses.map((a)=>DropdownMenuItem<int>(value:a['id'] as int,child:Text('${a['title']} - ${a['area']}'))).toList(),
     onChanged:(v)=>setState(()=>addressId=v)),
    const SizedBox(height:14),

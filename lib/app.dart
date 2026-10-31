@@ -7,6 +7,7 @@ import 'screens/checkout_screen.dart';
 import 'screens/campaign_detail_screen.dart';
 import 'screens/my_campaigns_screen.dart';
 import 'screens/my_orders_screen.dart';
+import 'screens/server_settings_screen.dart';
 
 class GroupBuyingApp extends StatelessWidget {
   const GroupBuyingApp({super.key});

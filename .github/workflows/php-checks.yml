@@ -34,4 +34,4 @@ jobs:
           QUEUE_CONNECTION: sync
         run: |
           php artisan migrate --force
-          php artisan test
+          php artisan test -- --display-warnings

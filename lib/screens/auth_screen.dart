@@ -120,6 +120,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 child: Text(isLogin ? 'تسجيل الدخول' : 'إنشاء حساب'),
               ),
               const SizedBox(height: 12),
+              TextButton(onPressed: () => Navigator.pushNamed(context, '/server-settings'), child: const Text('إعداد خادم الاختبار')),
               TextButton(
                 onPressed: () {
                   setState(() {

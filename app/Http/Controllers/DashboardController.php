@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Campaign;
 use App\Models\Order;
 use App\Models\Store;
+use App\Models\Product;
+use App\Services\CatalogModerationService;
 use App\Models\User;
 use App\Services\OrderFulfillmentService;
 use Illuminate\Http\Request;
@@ -69,6 +71,7 @@ class DashboardController extends Controller
             'orders' => $orders->latest()->limit(30)->get(),
             'campaigns' => $campaigns->latest()->limit(15)->get(),
             'stores' => $admin ? Store::latest()->limit(15)->get() : Store::where('user_id',$user->id)->get(),
+            'products' => $admin ? Product::latest()->limit(30)->get() : Product::whereIn('store_id',$storeIds)->latest()->limit(30)->get(),
             'orderCount' => (clone $scopedOrders)->count(),
             'collected' => (clone $scopedOrders)->whereNotNull('cod_collected_at')->sum('total'),
             'awaitingCollection' => (clone $scopedOrders)->where('status','delivered')->whereNull('cod_collected_at')->sum('total'),
@@ -95,4 +98,20 @@ class DashboardController extends Controller
         $result = $fulfillment->collectCod($order, $request->user('web')->id);
         return back()->with($result['success'] ? 'notice' : 'error', $result['success'] ? 'تم تسجيل التحصيل.' : $result['message']);
     }
+    public function moderateStore(Request $request, int $store, CatalogModerationService $service)
+    {
+        abort_unless($request->user('web')->role === 'admin',403);
+        $data=$request->validate(['status'=>'required|in:active,blocked']);
+        $result=$service->setStoreStatus($store,$data['status'],$request->user('web')->id);
+        return back()->with($result['success']?'notice':'error',$result['success']?'تم تحديث حالة المتجر.':$result['message']);
+    }
+
+    public function moderateProduct(Request $request, int $product, CatalogModerationService $service)
+    {
+        abort_unless($request->user('web')->role === 'admin',403);
+        $data=$request->validate(['status'=>'required|in:active,inactive']);
+        $result=$service->setProductStatus($product,$data['status'],$request->user('web')->id);
+        return back()->with($result['success']?'notice':'error',$result['success']?'تم تحديث حالة المنتج.':$result['message']);
+    }
+
 }

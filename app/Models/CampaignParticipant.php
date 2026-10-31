@@ -1,0 +1,15 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class CampaignParticipant extends Model
+{
+    protected $fillable = [
+        'campaign_id',
+        'user_id',
+        'quantity',
+        'status',
+    ];
+}

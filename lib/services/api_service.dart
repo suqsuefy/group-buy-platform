@@ -3,14 +3,23 @@ import 'package:flutter/foundation.dart';
 import 'api_endpoint.dart';
 
 class ApiService {
-  ApiService()
-      : _dio = Dio(BaseOptions(
+  ApiService({Dio? client})
+      : _client = client ?? Dio(BaseOptions(
           baseUrl: ApiEndpoint.baseUrl,
           headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
           connectTimeout: const Duration(seconds: 20),
           receiveTimeout: const Duration(seconds: 20),
         ));
-  final Dio _dio;
+
+  final Dio _client;
+
+  // The settings screen can change the HTTPS endpoint while the login screen
+  // (and its ApiService instance) is still mounted. Read the current URL on
+  // every request, not just when constructing the service.
+  Dio get _dio {
+    _client.options.baseUrl = ApiEndpoint.baseUrl;
+    return _client;
+  }
 
   Future<Map<String, dynamic>> register({
     required String name, required String email, required String phone, required String password,

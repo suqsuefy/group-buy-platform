@@ -50,6 +50,22 @@ class OrderController extends Controller {
   return response()->json($result,$result['success']?200:422);
  }
 
+ public function vendorOrders(Request $request) {
+  abort_unless($request->user()->status==='active',403);
+  $storeIds=\App\Models\Store::where('user_id',$request->user()->id)->pluck('id');
+  return response()->json(Order::with(['items.product','user'])->whereIn('store_id',$storeIds)->latest()->paginate(20));
+ }
+
+ public function history(Request $request,$id) {
+  $order=Order::with('store')->findOrFail($id);
+  $actor=$request->user();
+  abort_unless($actor->status==='active' && (
+   $actor->role==='admin' || $order->user_id===$actor->id || $order->store?->user_id===$actor->id
+  ),403);
+  return response()->json(DB::table('order_events')
+   ->where('order_id',$order->id)->orderBy('id')->get());
+ }
+
  public function collectCod(Request $request,$id) {
   abort_unless($request->user()->status==='active' && $request->user()->role==='admin',403);
   $result=$this->fulfillment->collectCod((int)$id,$request->user()->id);

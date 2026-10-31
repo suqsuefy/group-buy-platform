@@ -56,6 +56,14 @@ class ApiService {
     }, options: Options(headers: {'Authorization': 'Bearer $token'}));
     return Map<String, dynamic>.from(r.data);
   }
+  Future<List<dynamic>> getMyCampaigns(String token) async {
+    final r = await _dio.get('/my/campaigns', options: Options(headers: {'Authorization': 'Bearer $token'}));
+    return List<dynamic>.from(r.data);
+  }
+  Future<List<dynamic>> getMyOrders(String token) async {
+    final r = await _dio.get('/orders/my', options: Options(headers: {'Authorization': 'Bearer $token'}));
+    return List<dynamic>.from(r.data);
+  }
   Future<void> logout(String token) async {
     try { await _dio.post('/logout', options: Options(headers: {'Authorization': 'Bearer $token'})); }
     catch (e) { debugPrint('Logout request failed: $e'); }

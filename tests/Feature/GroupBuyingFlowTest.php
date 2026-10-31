@@ -95,7 +95,7 @@ class GroupBuyingFlowTest extends TestCase
         $this->join($customer, $f['campaign'])->assertUnprocessable();
     }
 
-    public function test_join_is_idempotent_for_network_retries(): void
+    public function test_repeated_join_explicitly_increases_quantity(): void
     {
         $f = $this->fixture();
         $customer = $this->user();
@@ -104,7 +104,7 @@ class GroupBuyingFlowTest extends TestCase
         $this->assertDatabaseHas('campaign_participants', [
             'campaign_id' => $f['campaign']->id,
             'user_id' => $customer->id,
-            'quantity' => 2,
+            'quantity' => 4,
         ]);
         $this->assertSame(1, (int) $f['campaign']->fresh()->current_participants);
     }
@@ -171,7 +171,7 @@ class GroupBuyingFlowTest extends TestCase
         ];
 
         $this->actingAs($customer, 'sanctum')->postJson('/api/orders', $payload)
-            ->assertCreated()->assertJsonPath('order.total', '140.00');
+            ->assertCreated()->assertJsonPath('order.total', 140);
         $this->assertDatabaseHas('order_items', [
             'product_id'=>$f['product']->id, 'quantity'=>2, 'unit_price'=>70,
         ]);

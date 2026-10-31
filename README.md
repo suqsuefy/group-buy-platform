@@ -1,37 +1,35 @@
-# جمعني
+# Group Buying
 
-منصة عربية للشراء الجماعي (group buying) في السوق المصري.
+Group Buying Marketplace for Egypt.
 
 ## Overview
-جمعني هو تطبيق عربي/منصة إلكترونية تسمح للمستخدمين بالانضمام إلى حملات شراء جماعي على منتجات محددة. كلما زاد عدد المشاركين، انخفض السعر. التطبيق يربط بين العميل والمورد عبر نموذج تجميع الطلبات.
+A marketplace for group-based purchasing, where users join campaigns to buy products at better prices as group demand grows.
+
+## Purpose
+The platform connects customers and vendors in a simple buying model:
+- Users join campaigns
+- Vendors create offers
+- Customers get discounted pricing when group size increases
+- The app earns a commission on each order
+
+## MVP Scope
+- User registration and login
+- Store creation
+- Product management
+- Campaign creation
+- Join campaign flow
+- Order creation
+- Cash on delivery in MVP
+- Admin dashboard overview
 
 ## Stack
 - Laravel 11
 - MySQL
-- Flutter (mobile app)
+- Flutter
 - Laravel Sanctum
-- Firebase (notifications)
+- Firebase
 
-## MVP Scope
-- login/register
-- store creation
-- product management
-- campaign creation
-- join campaign
-- order creation
-- admin overview
-- basic dashboard
-
-## Project flow
-1. User registers
-2. User sees active campaigns
-3. User joins campaign
-4. Campaign reaches min participants threshold
-5. User creates order
-6. Payment on delivery in MVP
-7. Admin tracks order and campaign status
-
-## Main API routes
+## Main API Endpoints
 - POST /api/register
 - POST /api/login
 - GET /api/products
@@ -43,5 +41,13 @@
 - GET /api/orders/my
 - GET /api/admin/overview
 
-## Note
-The repository is intentionally scaffolded as a real implementation foundation for a Laravel + Flutter group buying platform.
+## Project flow
+1. User creates account
+2. User browses campaigns
+3. User joins campaign
+4. Campaign reaches minimum number of participants
+5. User places order
+6. Order is fulfilled with cash on delivery in MVP
+
+## Notes
+This repo is an implementation foundation for a real group buying marketplace project.

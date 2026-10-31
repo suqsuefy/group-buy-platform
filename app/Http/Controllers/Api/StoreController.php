@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Store;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -34,7 +35,7 @@ class StoreController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'تم إنشاء المتجر بنجاح',
+            'message' => 'Store created successfully',
             'store' => $store,
         ], 201);
     }

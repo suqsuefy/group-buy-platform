@@ -50,7 +50,7 @@ class ProductController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'تم إضافة المنتج بنجاح',
+            'message' => 'Product created successfully',
             'product' => $product,
         ], 201);
     }

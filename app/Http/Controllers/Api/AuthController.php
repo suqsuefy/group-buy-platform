@@ -32,7 +32,7 @@ class AuthController extends Controller
         $token = $user->createToken('app')->plainTextToken;
 
         return response()->json([
-            'message' => 'تم تسجيل المستخدم بنجاح',
+            'message' => 'User registered successfully',
             'token' => $token,
             'user' => $user,
         ], 201);
@@ -49,14 +49,14 @@ class AuthController extends Controller
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             return response()->json([
-                'message' => 'بيانات الدخول غير صحيحة',
+                'message' => 'Invalid credentials',
             ], 401);
         }
 
         $token = $user->createToken('app')->plainTextToken;
 
         return response()->json([
-            'message' => 'تم تسجيل الدخول بنجاح',
+            'message' => 'Login successful',
             'token' => $token,
             'user' => $user,
         ]);

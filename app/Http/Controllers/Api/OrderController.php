@@ -55,7 +55,7 @@ class OrderController extends Controller
         }
 
         return response()->json([
-            'message' => 'تم إنشاء الطلب بنجاح',
+            'message' => 'Order created successfully',
             'order' => $order,
         ], 201);
     }

@@ -14,7 +14,7 @@ class CampaignService
         if ($campaign->status !== 'active') {
             return [
                 'success' => false,
-                'message' => 'الحملة غير نشطة الآن',
+                'message' => 'Campaign is not active',
             ];
         }
 
@@ -33,7 +33,7 @@ class CampaignService
 
         return [
             'success' => true,
-            'message' => 'تم انضمامك للحملة بنجاح',
+            'message' => 'Joined campaign successfully',
             'campaign' => $campaign,
             'participant' => $participant,
         ];
@@ -50,14 +50,14 @@ class CampaignService
 
             return [
                 'success' => true,
-                'message' => 'تم تأكيد الحملة',
+                'message' => 'Campaign confirmed',
                 'campaign' => $campaign,
             ];
         }
 
         return [
             'success' => false,
-            'message' => 'لم يصل عدد المشاركين إلى الحد الأدنى',
+            'message' => 'Minimum participants not reached',
             'current_participants' => $count,
             'min_participants' => $campaign->min_participants,
         ];

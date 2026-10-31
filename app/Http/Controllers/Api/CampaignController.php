@@ -57,7 +57,7 @@ class CampaignController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'تم إنشاء الحملة بنجاح',
+            'message' => 'Campaign created successfully',
             'campaign' => $campaign,
         ], 201);
     }

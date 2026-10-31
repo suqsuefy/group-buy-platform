@@ -17,12 +17,13 @@ class OrderController extends Controller {
   $user=$request->user();
   abort_unless(DB::table('addresses')->where('id',$data['address_id'])->where('user_id',$user->id)->exists(),403);
   return DB::transaction(function() use($data,$user){
+   $productId=Campaign::whereKey($data['campaign_id'])->value('product_id');
+   $product=Product::whereKey($productId)->lockForUpdate()->firstOrFail();
    $c=Campaign::whereKey($data['campaign_id'])->lockForUpdate()->firstOrFail();
    abort_unless($c->status==='fulfilled',422,'Campaign is not confirmed');
    $p=$c->participants()->where('user_id',$user->id)->where('status','joined')->first();
    abort_unless($p,403,'Join campaign first');
    abort_if(Order::where('campaign_id',$c->id)->where('user_id',$user->id)->exists(),422,'Order already placed');
-   $product=Product::whereKey($c->product_id)->lockForUpdate()->firstOrFail();
    abort_if($product->stock<$p->quantity,422,'Out of stock');
    $total=round((float)$c->group_price*$p->quantity,2);
    $order=Order::create(['user_id'=>$user->id,'store_id'=>$c->store_id,'campaign_id'=>$c->id,'total'=>$total,'commission'=>round($total*.1,2),'payment_method'=>'cash_on_delivery','status'=>'pending','address_id'=>$data['address_id']]);

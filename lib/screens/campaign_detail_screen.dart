@@ -27,11 +27,13 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   Future<void> _loadCampaign() async {
     try {
       final data = await _apiService.getCampaign(widget.campaignId);
+      if (!mounted) return;
       setState(() {
         campaign = data;
         isLoading = false;
       });
     } catch (_) {
+      if (!mounted) return;
       setState(() => isLoading = false);
     }
   }
@@ -111,6 +113,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
 
                     appState.addToCart({
                       'id': campaign['product_id'],
+                      'campaign_id': widget.campaignId,
                       'title': campaign['title'],
                       'price': campaign['group_price'],
                       'qty': 1,

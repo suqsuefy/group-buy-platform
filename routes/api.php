@@ -1,5 +1,6 @@
 <?php
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\CampaignController;
 use App\Http\Controllers\Api\OrderController;
@@ -17,6 +18,8 @@ Route::get('/campaigns/{id}',[CampaignController::class,'show']);
 Route::middleware('auth:sanctum')->group(function(){
  Route::get('/user',fn(Request $request)=>$request->user());
  Route::post('/logout',[AuthController::class,'logout']);
+ Route::get('/addresses',[AddressController::class,'index']);
+ Route::post('/addresses',[AddressController::class,'store']);
  Route::post('/stores',[StoreController::class,'store']);
  Route::post('/products',[ProductController::class,'store']);
  Route::post('/campaigns',[CampaignController::class,'store']);

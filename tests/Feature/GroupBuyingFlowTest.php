@@ -246,6 +246,67 @@ class GroupBuyingFlowTest extends TestCase
         $this->assertSame(1, (int) $f['product']->fresh()->stock);
     }
 
+
+    public function test_owner_can_cancel_active_campaign_and_release_stock_reservations(): void
+    {
+        $f=$this->fixture(stock:2,minimum:2,target:2);
+        $this->join($this->user(),$f['campaign'],2)->assertOk();
+        $this->actingAs($f['seller'],'sanctum')->postJson('/api/campaigns/'.$f['campaign']->id.'/cancel')->assertOk();
+        $this->assertSame('cancelled',$f['campaign']->fresh()->status);
+        $this->assertDatabaseHas('campaign_participants',['campaign_id'=>$f['campaign']->id,'status'=>'cancelled']);
+        $other=Campaign::create([
+            'store_id'=>$f['store']->id,'product_id'=>$f['product']->id,
+            'title'=>'Another deal','regular_price'=>100,'group_price'=>70,
+            'min_participants'=>2,'target_participants'=>2,'current_participants'=>0,
+            'start_at'=>now()->subHour(),'end_at'=>now()->addDay(),'status'=>'active',
+        ]);
+        $this->join($this->user(),$other,2)->assertOk();
+        $this->actingAs($f['seller'],'sanctum')->postJson('/api/campaigns/'.$f['campaign']->id.'/cancel')->assertUnprocessable();
+    }
+
+    public function test_customer_cannot_cancel_another_sellers_campaign(): void
+    {
+        $f=$this->fixture();
+        $this->actingAs($this->user(),'sanctum')->postJson('/api/campaigns/'.$f['campaign']->id.'/cancel')->assertForbidden();
+        $this->assertSame('active',$f['campaign']->fresh()->status);
+    }
+
+    public function test_expiring_overdue_campaign_releases_participants_and_is_repeat_safe(): void
+    {
+        $f=$this->fixture(stock:2);
+        $this->join($this->user(),$f['campaign'],2)->assertOk();
+        $f['campaign']->update(['end_at'=>now()->subMinute()]);
+        $this->artisan('campaigns:expire')->assertExitCode(0);
+        $this->assertSame('expired',$f['campaign']->fresh()->status);
+        $this->assertDatabaseHas('campaign_participants',['campaign_id'=>$f['campaign']->id,'status'=>'cancelled']);
+        $this->artisan('campaigns:expire')->assertExitCode(0);
+        $other=Campaign::create([
+            'store_id'=>$f['store']->id,'product_id'=>$f['product']->id,
+            'title'=>'New deal','regular_price'=>100,'group_price'=>70,
+            'min_participants'=>2,'target_participants'=>2,
+            'current_participants'=>0,'start_at'=>now()->subHour(),
+            'end_at'=>now()->addDay(),'status'=>'active',
+        ]);
+        $this->join($this->user(),$other,2)->assertOk();
+    }
+
+    public function test_fulfilled_campaign_with_order_cannot_be_cancelled(): void
+    {
+        $f=$this->fixture();
+        $customer=$this->user();
+        $this->join($customer,$f['campaign'])->assertOk();
+        $this->join($this->user(),$f['campaign'])->assertOk();
+        $this->actingAs($f['seller'],'sanctum')->postJson('/api/campaigns/'.$f['campaign']->id.'/confirm')->assertOk();
+        $this->actingAs($customer,'sanctum')->postJson('/api/orders',[
+            'campaign_id'=>$f['campaign']->id,
+            'address_id'=>$this->address($customer)->id,
+            'payment_method'=>'cash_on_delivery',
+        ])->assertCreated();
+        $this->actingAs($f['seller'],'sanctum')->postJson('/api/campaigns/'.$f['campaign']->id.'/cancel')->assertUnprocessable();
+        $this->assertSame('fulfilled',$f['campaign']->fresh()->status);
+        $this->assertDatabaseCount('orders',1);
+    }
+
     public function test_more_than_available_stock_cannot_be_purchased(): void
     {
         $f = $this->fixture();

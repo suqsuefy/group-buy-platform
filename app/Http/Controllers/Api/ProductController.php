@@ -33,8 +33,8 @@ class ProductController extends Controller
         $product = Product::create([
             ...$data,
             'slug'=>Str::slug($data['title']).'-'.Str::lower(Str::random(8)),
-            'status'=>'active',
+            'status'=>'draft',
         ]);
-        return response()->json(['message'=>'Product created successfully','product'=>$product],201);
+        return response()->json(['message'=>'Product submitted for review','product'=>$product],201);
     }
 }

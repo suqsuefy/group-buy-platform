@@ -8,6 +8,8 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 class OrderController extends Controller {
+ public function __construct(private \App\Services\OrderFulfillmentService $fulfillment) {}
+
  public function store(Request $request) {
   $data=$request->validate([
    'campaign_id'=>'required|exists:campaigns,id',
@@ -35,4 +37,23 @@ class OrderController extends Controller {
  public function myOrders(Request $request) {
   return response()->json(Order::with('items.product')->where('user_id',$request->user()->id)->latest()->get());
  }
+ public function transition(Request $request, $id) {
+  $data=$request->validate([
+   'action'=>'required|in:process,ship,deliver,cancel',
+   'delivery_reference'=>'required_if:action,ship|nullable|string|max:120',
+   'reason'=>'nullable|string|max:255',
+  ]);
+  $order=Order::with('store')->findOrFail($id);
+  $user=$request->user();
+  abort_unless($user->status==='active' && ($user->role==='admin' || $order->store?->user_id===$user->id),403);
+  $result=$this->fulfillment->transition((int)$id,$data['action'],$data['delivery_reference']??null,$data['reason']??null);
+  return response()->json($result,$result['success']?200:422);
+ }
+
+ public function collectCod(Request $request,$id) {
+  abort_unless($request->user()->status==='active' && $request->user()->role==='admin',403);
+  $result=$this->fulfillment->collectCod((int)$id);
+  return response()->json($result,$result['success']?200:422);
+ }
+
 }

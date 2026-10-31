@@ -26,8 +26,8 @@ class CampaignController extends Controller {
   return response()->json(['campaign'=>$c],201);
  }
  public function join(Request $request,$id) {
-  $d=$request->validate(['quantity'=>'nullable|integer|min:1']);
-  $r=$this->campaignService->joinCampaign((int)$id,$request->user()->id,(int)($d['quantity']??1));
+  $d=$request->validate(['quantity'=>'nullable|integer|min:1','idempotency_key'=>'nullable|string|min:8|max:100|regex:/^[A-Za-z0-9_-]+$/']);
+  $r=$this->campaignService->joinCampaign((int)$id,$request->user()->id,(int)($d['quantity']??1),$d['idempotency_key']??null);
   return response()->json($r,$r['success']?200:422);
  }
  public function confirm(Request $request,$id) {

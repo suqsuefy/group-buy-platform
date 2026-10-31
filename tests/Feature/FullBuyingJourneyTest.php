@@ -69,11 +69,10 @@ class FullBuyingJourneyTest extends TestCase
             $response=$this->postJson('/api/register',$data)->assertCreated();
             $buyer=User::where('email',$data['email'])->firstOrFail();
             $buyerIds[]=$buyer->id;
-            $token=$response->json('token');
-            $this->withToken($token)->postJson('/api/campaigns/'.$campaign->id.'/join',[
+            $this->actingAs($buyer,'sanctum')->postJson('/api/campaigns/'.$campaign->id.'/join',[
                 'quantity'=>$n,'idempotency_key'=>'buyer-'.$n.'-campaign-001',
             ])->assertOk();
-            $this->withToken($token)->postJson('/api/addresses',[
+            $this->actingAs($buyer,'sanctum')->postJson('/api/addresses',[
                 'title'=>'Home','city'=>'Cairo','area'=>'Dokki','phone'=>'01010000001',
             ])->assertCreated();
         }

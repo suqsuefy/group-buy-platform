@@ -23,6 +23,11 @@ class CatalogModerationService
             )) return ['success'=>false,'message'=>'Resolve active campaigns and orders before blocking'];
             $store->status = $status;
             $store->save();
+            // Registration creates customer accounts. Only an admin-approved
+            // store promotes its owner to a vendor (never on self-submission).
+            if ($status === 'active' && $store->owner?->role === 'customer') {
+                $store->owner->update(['role' => 'vendor']);
+            }
             $this->record('store', $id, $from, $status, $actorId);
             return ['success'=>true,'store'=>$store->fresh()];
         }, 3);

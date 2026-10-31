@@ -134,6 +134,30 @@ class GroupBuyingFlowTest extends TestCase
         ]);
     }
 
+
+    public function test_buyer_can_view_only_their_joined_campaigns_and_checkout_status(): void
+    {
+        $f = $this->fixture();
+        $buyer = $this->user();
+        $outsider = $this->user();
+        $this->join($buyer, $f['campaign'], 2)->assertOk();
+        $this->actingAs($outsider, 'sanctum')->getJson('/api/my/campaigns')->assertOk()->assertJsonCount(0);
+        $this->actingAs($buyer, 'sanctum')->getJson('/api/my/campaigns')->assertOk()
+            ->assertJsonCount(1)->assertJsonPath('0.quantity', 2)
+            ->assertJsonPath('0.order', null)
+            ->assertJsonPath('0.campaign.status', 'active');
+        $f['campaign']->update(['status' => 'fulfilled']);
+        $this->actingAs($buyer, 'sanctum')->getJson('/api/my/campaigns')->assertOk()
+            ->assertJsonPath('0.campaign.status', 'fulfilled');
+        $this->actingAs($buyer, 'sanctum')->postJson('/api/orders', [
+            'campaign_id' => $f['campaign']->id,
+            'address_id' => $this->address($buyer)->id,
+            'payment_method' => 'cash_on_delivery',
+        ])->assertCreated();
+        $this->getJson('/api/my/campaigns')->assertOk()
+            ->assertJsonPath('0.order.status', 'pending');
+    }
+
     public function test_target_and_stock_are_enforced(): void
     {
         $f = $this->fixture(stock: 2, minimum: 2, target: 2);

@@ -46,13 +46,13 @@ class OrderController extends Controller {
   $order=Order::with('store')->findOrFail($id);
   $user=$request->user();
   abort_unless($user->status==='active' && ($user->role==='admin' || $order->store?->user_id===$user->id),403);
-  $result=$this->fulfillment->transition((int)$id,$data['action'],$data['delivery_reference']??null,$data['reason']??null);
+  $result=$this->fulfillment->transition((int)$id,$data['action'],$data['delivery_reference']??null,$data['reason']??null,$user->id);
   return response()->json($result,$result['success']?200:422);
  }
 
  public function collectCod(Request $request,$id) {
   abort_unless($request->user()->status==='active' && $request->user()->role==='admin',403);
-  $result=$this->fulfillment->collectCod((int)$id);
+  $result=$this->fulfillment->collectCod((int)$id,$request->user()->id);
   return response()->json($result,$result['success']?200:422);
  }
 

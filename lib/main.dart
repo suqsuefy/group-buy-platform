@@ -8,6 +8,7 @@ import 'services/api_endpoint.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await ApiEndpoint.load();
   await FirebaseService.init();
 
   runApp(

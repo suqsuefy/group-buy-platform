@@ -28,6 +28,8 @@ Route::middleware('auth:sanctum')->group(function(){
  Route::post('/campaigns/{id}/cancel',[CampaignController::class,'cancel']);
  Route::post('/orders',[OrderController::class,'store']);
  Route::get('/orders/my',[OrderController::class,'myOrders']);
+ Route::get('/vendor/orders',[OrderController::class,'vendorOrders']);
+ Route::get('/orders/{id}/history',[OrderController::class,'history']);
  Route::post('/orders/{id}/transition',[OrderController::class,'transition']);
  Route::middleware('admin')->group(function(){
   Route::get('/admin/overview',[AdminController::class,'overview']);

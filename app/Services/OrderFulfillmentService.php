@@ -8,9 +8,9 @@ use Illuminate\Support\Facades\DB;
 
 class OrderFulfillmentService
 {
-    public function transition(int $orderId, string $action, ?string $deliveryReference = null, ?string $reason = null): array
+    public function transition(int $orderId, string $action, ?string $deliveryReference = null, ?string $reason = null, ?int $actorId = null): array
     {
-        return DB::transaction(function () use ($orderId, $action, $deliveryReference, $reason) {
+        return DB::transaction(function () use ($orderId, $action, $deliveryReference, $reason, $actorId) {
             // Lock the product before the order to follow checkout lock ordering.
             $productId = DB::table('order_items')->where('order_id', $orderId)->value('product_id');
             if ($productId === null) abort(404);
@@ -44,15 +44,22 @@ class OrderFulfillmentService
             }
             if ($action === 'deliver') $order->delivered_at = now();
 
+            $previousStatus = $order->status;
             $order->status = $next;
             $order->save();
+            DB::table('order_events')->insert([
+                'order_id'=>$order->id,'actor_id'=>$actorId,'action'=>$action,
+                'from_status'=>$previousStatus,'to_status'=>$next,
+                'note'=>$action === 'ship' ? $deliveryReference : ($action === 'cancel' ? $reason : null),
+                'created_at'=>now(),'updated_at'=>now(),
+            ]);
             return ['success'=>true,'order'=>$order->fresh()->load('items')];
         }, 3);
     }
 
-    public function collectCod(int $orderId): array
+    public function collectCod(int $orderId, ?int $actorId = null): array
     {
-        return DB::transaction(function () use ($orderId) {
+        return DB::transaction(function () use ($orderId, $actorId) {
             $order=Order::whereKey($orderId)->lockForUpdate()->firstOrFail();
             if ($order->status !== 'delivered' || $order->payment_method !== 'cash_on_delivery'
                 || $order->cod_collected_at !== null) {
@@ -60,6 +67,11 @@ class OrderFulfillmentService
             }
             $order->cod_collected_at=now();
             $order->save();
+            DB::table('order_events')->insert([
+                'order_id'=>$order->id,'actor_id'=>$actorId,'action'=>'collect_cod',
+                'from_status'=>$order->status,'to_status'=>$order->status,
+                'note'=>'COD collection recorded', 'created_at'=>now(),'updated_at'=>now(),
+            ]);
             return ['success'=>true,'order'=>$order->fresh()];
         },3);
     }

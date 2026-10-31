@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -17,6 +20,13 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   final ApiService _apiService = ApiService();
   Map<String, dynamic> campaign = {};
   bool isLoading = true;
+  bool isJoining = false;
+  String? pendingJoinKey;
+
+  String _newJoinKey() {
+    final bytes = List<int>.generate(18, (_) => Random.secure().nextInt(256));
+    return base64UrlEncode(bytes).replaceAll('=', '');
+  }
 
   @override
   void initState() {
@@ -101,15 +111,21 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () async {
+                onPressed: isJoining ? null : () async {
+                  setState(() {
+                    isJoining = true;
+                    pendingJoinKey ??= _newJoinKey();
+                  });
                   try {
                     final result = await _apiService.joinCampaign(
                       id: widget.campaignId,
                       token: appState.token,
                       quantity: 1,
+                      idempotencyKey: pendingJoinKey!,
                     );
 
                     if (!mounted) return;
+                    pendingJoinKey = null;
 
                     appState.addToCart({
                       'id': campaign['product_id'],
@@ -127,6 +143,8 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('حدث خطأ: $e')),
                     );
+                  } finally {
+                    if (mounted) setState(() => isJoining = false);
                   }
                 },
                 child: const Text('انضم للحملة'),

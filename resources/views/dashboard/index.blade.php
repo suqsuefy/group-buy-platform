@@ -47,9 +47,22 @@
 @empty<tr><td colspan="5">لا توجد حملات.</td></tr>@endforelse
 </tbody></table></div>
 <h2>المتاجر</h2>
-<div class="panel"><table><thead><tr><th>المتجر</th><th>المدينة</th><th>الحالة</th></tr></thead><tbody>
-@forelse($stores as $store)<tr><td>{{ $store->name }}</td><td>{{ $store->city ?? '—' }}</td><td>{{ $store->status }}</td></tr>
-@empty<tr><td colspan="3">لا توجد متاجر.</td></tr>@endforelse
+<div class="panel"><table><thead><tr><th>المتجر</th><th>المدينة</th><th>الحالة</th><th>الإجراء</th></tr></thead><tbody>
+@forelse($stores as $store)<tr><td>{{ $store->name }}</td><td>{{ $store->city ?? '—' }}</td><td>{{ $store->status }}</td><td>@if($admin)
+@if($store->status !== 'active')<form class="action" method="post" action="{{ route('dashboard.stores.moderate',$store->id) }}">@csrf<input type="hidden" name="status" value="active"><button class="success">اعتماد المتجر</button></form>@else<form class="action" method="post" action="{{ route('dashboard.stores.moderate',$store->id) }}">@csrf<input type="hidden" name="status" value="blocked"><button class="warning">حظر المتجر</button></form>@endif
+@endif</td></tr>
+@empty<tr><td colspan="4">لا توجد متاجر.</td></tr>@endforelse
 </tbody></table></div>
+<h2>المنتجات</h2>
+<div class="panel"><table><thead><tr><th>المنتج</th><th>المتجر</th><th>المخزون</th><th>الحالة</th><th>الإجراء</th></tr></thead><tbody>
+@forelse($products as $product)<tr><td>{{ $product->title }}</td><td>#{{ $product->store_id }}</td><td>{{ $product->stock }}</td><td>{{ $product->status }}</td><td>
+@if($admin)
+@if($product->status!=='active')
+<form class="action" method="post" action="{{ route('dashboard.products.moderate',$product->id) }}">@csrf<input type="hidden" name="status" value="active"><button class="success">اعتماد المنتج</button></form>
+@else
+<form class="action" method="post" action="{{ route('dashboard.products.moderate',$product->id) }}">@csrf<input type="hidden" name="status" value="inactive"><button class="warning">إيقاف المنتج</button></form>
+@endif
+@endif</td></tr>
+@empty<tr><td colspan="5">لا توجد منتجات.</td></tr>@endforelse</tbody></table></div>
 <p class="muted">لوحة تجريبية تعرض بيانات النظام، وتسجيل التحصيل لا يغني عن التسوية مع شركة الشحن.</p>
 </main></body></html>

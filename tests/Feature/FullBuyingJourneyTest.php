@@ -38,7 +38,7 @@ class FullBuyingJourneyTest extends TestCase
         ])->assertRedirect();
         $this->assertSame('vendor',$seller->fresh()->role);
 
-        $this->actingAs($seller,'web')->get('/dashboard')->assertOk()->assertSee('Seller Shop');
+        $this->actingAs($seller->fresh(),'web')->get('/dashboard')->assertOk()->assertSee('Seller Shop');
         $this->withToken($sellerResponse->json('token'))->postJson('/api/products',[
             'store_id'=>$store->id,'title'=>'Group Item','regular_price'=>100,'stock'=>5,
         ])->assertCreated()->assertJsonPath('product.status','draft');

@@ -4,54 +4,37 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\Store;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
-    public function index()
-    {
-        return response()->json(Product::all());
+    public function index() {
+        return response()->json(Product::where('status','active')->whereHas('store', fn($q) => $q->where('status','active'))->get());
     }
-
-    public function show($id)
-    {
-        $product = Product::findOrFail($id);
-
-        return response()->json($product);
+    public function show($id) {
+        return response()->json(Product::where('status','active')->whereHas('store', fn($q) => $q->where('status','active'))->findOrFail($id));
     }
-
-    public function store(Request $request)
-    {
+    public function store(Request $request) {
         $data = $request->validate([
-            'store_id' => 'required|exists:stores,id',
-            'category_id' => 'nullable|exists:categories,id',
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'short_description' => 'nullable|string',
-            'regular_price' => 'required|numeric',
-            'sale_price' => 'nullable|numeric',
-            'stock' => 'required|integer|min:0',
-            'image' => 'nullable|string',
+            'store_id'=>'required|exists:stores,id',
+            'category_id'=>'nullable|exists:categories,id',
+            'title'=>'required|string|max:255',
+            'description'=>'nullable|string',
+            'short_description'=>'nullable|string',
+            'regular_price'=>'required|numeric|gt:0',
+            'sale_price'=>'nullable|numeric|gt:0|lte:regular_price',
+            'stock'=>'required|integer|min:0',
+            'image'=>'nullable|string',
         ]);
-
+        $store = Store::findOrFail($data['store_id']);
+        abort_unless($store->user_id === $request->user()->id && $store->status === 'active', 403);
         $product = Product::create([
-            'store_id' => $data['store_id'],
-            'category_id' => $data['category_id'] ?? null,
-            'title' => $data['title'],
-            'slug' => Str::slug($data['title']),
-            'description' => $data['description'] ?? null,
-            'short_description' => $data['short_description'] ?? null,
-            'regular_price' => $data['regular_price'],
-            'sale_price' => $data['sale_price'] ?? null,
-            'stock' => $data['stock'],
-            'image' => $data['image'] ?? null,
-            'status' => 'active',
+            ...$data,
+            'slug'=>Str::slug($data['title']).'-'.Str::lower(Str::random(8)),
+            'status'=>'active',
         ]);
-
-        return response()->json([
-            'message' => 'Product created successfully',
-            'product' => $product,
-        ], 201);
+        return response()->json(['message'=>'Product created successfully','product'=>$product],201);
     }
 }

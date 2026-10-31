@@ -23,6 +23,8 @@ jobs:
         run: |
           php artisan about
           php artisan route:list
+      - name: Prepare disposable test environment
+        run: cp .env.example .env
       - name: Run migrations and tests on isolated SQLite memory database
         env:
           APP_ENV: testing

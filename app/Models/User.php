@@ -9,19 +9,8 @@ class User extends Authenticatable
 {
     use HasApiTokens;
 
-    protected $fillable = [
-        'name',
-        'email',
-        'phone',
-        'password',
-        'role',
-        'city',
-        'avatar',
-        'status',
-    ];
+    protected $fillable = ['name','email','phone','password','role','city','avatar','status'];
+    protected $hidden = ['password','remember_token'];
 
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    public function stores() { return $this->hasMany(Store::class); }
 }

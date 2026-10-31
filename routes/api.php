@@ -28,9 +28,11 @@ Route::middleware('auth:sanctum')->group(function(){
  Route::post('/campaigns/{id}/cancel',[CampaignController::class,'cancel']);
  Route::post('/orders',[OrderController::class,'store']);
  Route::get('/orders/my',[OrderController::class,'myOrders']);
+ Route::post('/orders/{id}/transition',[OrderController::class,'transition']);
  Route::middleware('admin')->group(function(){
   Route::get('/admin/overview',[AdminController::class,'overview']);
   Route::get('/admin/orders',[AdminController::class,'orders']);
+  Route::post('/admin/orders/{id}/collect-cod',[OrderController::class,'collectCod']);
   Route::get('/admin/products',[AdminController::class,'products']);
   Route::get('/admin/campaigns',[AdminController::class,'campaigns']);
  });

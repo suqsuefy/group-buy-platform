@@ -1,13 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'api_endpoint.dart';
 
 class ApiService {
   ApiService()
       : _dio = Dio(BaseOptions(
-          baseUrl: const String.fromEnvironment(
-            'API_BASE_URL',
-            defaultValue: 'http://10.0.2.2:8000/api',
-          ),
+          baseUrl: ApiEndpoint.baseUrl,
           headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
           connectTimeout: const Duration(seconds: 20),
           receiveTimeout: const Duration(seconds: 20),

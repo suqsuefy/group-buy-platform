@@ -9,6 +9,7 @@ Route::get('/', fn () => response()->json([
 
 use App\Http\Controllers\DashboardController;
 
+Route::get('/login', fn () => redirect()->route('dashboard.login'))->name('login');
 Route::middleware('guest:web')->group(function () {
     Route::get('/dashboard/login', [DashboardController::class, 'loginForm'])->name('dashboard.login');
     Route::post('/dashboard/login', [DashboardController::class, 'login'])->name('dashboard.login.submit');

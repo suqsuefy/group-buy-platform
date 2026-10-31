@@ -17,7 +17,8 @@ class AdminController extends Controller
             'products' => Product::count(),
             'campaigns' => Campaign::count(),
             'orders' => Order::count(),
-            'revenue' => Order::sum('total'),
+            'revenue' => Order::whereNotNull('cod_collected_at')->sum('total'),
+            'pending_cod' => Order::where('status', 'delivered')->whereNull('cod_collected_at')->sum('total'),
         ]);
     }
 

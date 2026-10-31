@@ -4,9 +4,11 @@ import 'package:provider/provider.dart';
 import 'providers/app_state.dart';
 import 'app.dart';
 import 'services/firebase_service.dart';
+import 'services/api_endpoint.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await ApiEndpoint.load();
   await FirebaseService.init();
 
   runApp(

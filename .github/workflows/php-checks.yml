@@ -1,0 +1,39 @@
+name: Laravel checks
+on:
+  push:
+    branches: [group-buying, "fix/**"]
+  pull_request:
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo_sqlite, sqlite3
+          coverage: none
+      - name: Lint PHP source
+        run: find app bootstrap config database public routes tests -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Validate Composer metadata
+        run: composer validate --no-check-publish
+      - name: Install dependencies (security policy enabled)
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Verify Laravel boot and routes
+        run: |
+          php artisan about
+          php artisan route:list
+      - name: Prepare disposable test environment
+        run: cp .env.example .env
+      - name: Run migrations and tests on isolated SQLite memory database
+        env:
+          APP_ENV: testing
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
+        run: |
+          php artisan migrate --force
+          php artisan test --display-warnings

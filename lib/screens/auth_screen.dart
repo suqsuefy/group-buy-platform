@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/app_state.dart';
@@ -120,6 +121,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 child: Text(isLogin ? 'تسجيل الدخول' : 'إنشاء حساب'),
               ),
               const SizedBox(height: 12),
+              if (kDebugMode) TextButton(onPressed: () => Navigator.pushNamed(context, '/server-settings'), child: const Text('إعداد خادم الاختبار')),
               TextButton(
                 onPressed: () {
                   setState(() {

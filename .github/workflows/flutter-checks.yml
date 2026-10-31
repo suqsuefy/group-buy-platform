@@ -1,0 +1,21 @@
+name: Flutter checks
+on:
+  push:
+    branches: [group-buying, "fix/**"]
+  pull_request:
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.35.7'
+          cache: true
+      - name: Install Flutter dependencies
+        run: flutter pub get
+      - name: Analyze Flutter source
+        run: flutter analyze --no-fatal-infos
+      - name: Test Flutter
+        run: flutter test

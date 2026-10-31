@@ -1,92 +1,78 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'api_endpoint.dart';
 
 class ApiService {
-  final Dio _dio = Dio(
-    BaseOptions(
-      baseUrl: 'http://localhost:8000/api',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      connectTimeout: const Duration(seconds: 20),
-      receiveTimeout: const Duration(seconds: 20),
-    ),
-  );
+  ApiService({Dio? client})
+      : _client = client ?? Dio(BaseOptions(
+          baseUrl: ApiEndpoint.baseUrl,
+          headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
+          connectTimeout: const Duration(seconds: 20),
+          receiveTimeout: const Duration(seconds: 20),
+        ));
+
+  final Dio _client;
+
+  // The settings screen can change the HTTPS endpoint while the login screen
+  // (and its ApiService instance) is still mounted. Read the current URL on
+  // every request, not just when constructing the service.
+  Dio get _dio {
+    _client.options.baseUrl = ApiEndpoint.baseUrl;
+    return _client;
+  }
 
   Future<Map<String, dynamic>> register({
-    required String name,
-    required String email,
-    required String phone,
-    required String password,
+    required String name, required String email, required String phone, required String password,
   }) async {
-    final response = await _dio.post('/register', data: {
-      'name': name,
-      'email': email,
-      'phone': phone,
-      'password': password,
-    });
-
-    return response.data;
+    final r = await _dio.post('/register', data: {'name': name, 'email': email, 'phone': phone, 'password': password});
+    return Map<String, dynamic>.from(r.data);
   }
-
-  Future<Map<String, dynamic>> login({
-    required String email,
-    required String password,
-  }) async {
-    final response = await _dio.post('/login', data: {
-      'email': email,
-      'password': password,
-    });
-
-    return response.data;
+  Future<Map<String, dynamic>> login({required String email, required String password}) async {
+    final r = await _dio.post('/login', data: {'email': email, 'password': password});
+    return Map<String, dynamic>.from(r.data);
   }
-
   Future<List<dynamic>> getCampaigns() async {
-    final response = await _dio.get('/campaigns');
-    return response.data;
+    final r = await _dio.get('/campaigns'); return List<dynamic>.from(r.data);
   }
-
   Future<Map<String, dynamic>> getCampaign(int id) async {
-    final response = await _dio.get('/campaigns/$id');
-    return response.data;
+    final r = await _dio.get('/campaigns/$id'); return Map<String, dynamic>.from(r.data);
   }
-
-  Future<Map<String, dynamic>> joinCampaign({
-    required int id,
-    required String token,
-    int quantity = 1,
+  Future<Map<String, dynamic>> joinCampaign({required int id, required String token, int quantity = 1, required String idempotencyKey}) async {
+    final r = await _dio.post('/campaigns/$id/join', data: {'quantity': quantity, 'idempotency_key': idempotencyKey},
+      options: Options(headers: {'Authorization': 'Bearer $token'}));
+    return Map<String, dynamic>.from(r.data);
+  }
+  Future<List<dynamic>> getAddresses(String token) async {
+    final r = await _dio.get('/addresses', options: Options(headers: {'Authorization': 'Bearer $token'}));
+    return List<dynamic>.from(r.data);
+  }
+  Future<Map<String, dynamic>> addAddress({
+    required String token, required String title, required String city,
+    required String area, required String phone, String? street,
   }) async {
-    final response = await _dio.post(
-      '/campaigns/$id/join',
-      data: {'quantity': quantity},
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      ),
-    );
-
-    return response.data;
+    final r = await _dio.post('/addresses',
+      data: {'title': title, 'city': city, 'area': area, 'phone': phone, 'street': street},
+      options: Options(headers: {'Authorization': 'Bearer $token'}));
+    return Map<String, dynamic>.from(r.data);
   }
-
   Future<Map<String, dynamic>> createOrder({
-    required List<Map<String, dynamic>> items,
-    required String paymentMethod,
-    required String token,
+    required int campaignId, required int addressId, required String token,
   }) async {
-    final response = await _dio.post(
-      '/orders',
-      data: {
-        'items': items,
-        'payment_method': paymentMethod,
-      },
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      ),
-    );
-
-    return response.data;
+    final r = await _dio.post('/orders', data: {
+      'campaign_id': campaignId, 'address_id': addressId, 'payment_method': 'cash_on_delivery',
+    }, options: Options(headers: {'Authorization': 'Bearer $token'}));
+    return Map<String, dynamic>.from(r.data);
+  }
+  Future<List<dynamic>> getMyCampaigns(String token) async {
+    final r = await _dio.get('/my/campaigns', options: Options(headers: {'Authorization': 'Bearer $token'}));
+    return List<dynamic>.from(r.data);
+  }
+  Future<List<dynamic>> getMyOrders(String token) async {
+    final r = await _dio.get('/orders/my', options: Options(headers: {'Authorization': 'Bearer $token'}));
+    return List<dynamic>.from(r.data);
+  }
+  Future<void> logout(String token) async {
+    try { await _dio.post('/logout', options: Options(headers: {'Authorization': 'Bearer $token'})); }
+    catch (e) { debugPrint('Logout request failed: $e'); }
   }
 }

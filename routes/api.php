@@ -1,31 +1,42 @@
 <?php
-
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AddressController;
+use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\CampaignController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\StoreController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', fn () => auth()->user());
-
-    Route::get('/stores', [StoreController::class, 'index']);
-    Route::post('/stores', [StoreController::class, 'store']);
-
-    Route::get('/products', [ProductController::class, 'index']);
-    Route::get('/products/{id}', [ProductController::class, 'show']);
-    Route::post('/products', [ProductController::class, 'store']);
-
-    Route::get('/campaigns', [CampaignController::class, 'index']);
-    Route::get('/campaigns/{id}', [CampaignController::class, 'show']);
-    Route::post('/campaigns', [CampaignController::class, 'store']);
-    Route::post('/campaigns/{id}/join', [CampaignController::class, 'join']);
-    Route::post('/campaigns/{id}/confirm', [CampaignController::class, 'confirm']);
-
-    Route::post('/orders', [OrderController::class, 'store']);
-    Route::get('/orders/my', [OrderController::class, 'myOrders']);
+Route::post('/register',[AuthController::class,'register']);
+Route::post('/login',[AuthController::class,'login']);
+Route::get('/stores',[StoreController::class,'index']);
+Route::get('/products',[ProductController::class,'index']);
+Route::get('/products/{id}',[ProductController::class,'show']);
+Route::get('/campaigns',[CampaignController::class,'index']);
+Route::get('/campaigns/{id}',[CampaignController::class,'show']);
+Route::middleware('auth:sanctum')->group(function(){
+ Route::get('/user',fn(Request $request)=>$request->user());
+ Route::post('/logout',[AuthController::class,'logout']);
+ Route::get('/my/campaigns',[CampaignController::class,'myCampaigns']);
+ Route::get('/addresses',[AddressController::class,'index']);
+ Route::post('/addresses',[AddressController::class,'store']);
+ Route::post('/stores',[StoreController::class,'store']);
+ Route::post('/products',[ProductController::class,'store']);
+ Route::post('/campaigns',[CampaignController::class,'store']);
+ Route::post('/campaigns/{id}/join',[CampaignController::class,'join']);
+ Route::post('/campaigns/{id}/confirm',[CampaignController::class,'confirm']);
+ Route::post('/campaigns/{id}/cancel',[CampaignController::class,'cancel']);
+ Route::post('/orders',[OrderController::class,'store']);
+ Route::get('/orders/my',[OrderController::class,'myOrders']);
+ Route::get('/vendor/orders',[OrderController::class,'vendorOrders']);
+ Route::get('/orders/{id}/history',[OrderController::class,'history']);
+ Route::post('/orders/{id}/transition',[OrderController::class,'transition']);
+ Route::middleware('admin')->group(function(){
+  Route::get('/admin/overview',[AdminController::class,'overview']);
+  Route::get('/admin/orders',[AdminController::class,'orders']);
+  Route::post('/admin/orders/{id}/collect-cod',[OrderController::class,'collectCod']);
+  Route::get('/admin/products',[AdminController::class,'products']);
+  Route::get('/admin/campaigns',[AdminController::class,'campaigns']);
+ });
 });

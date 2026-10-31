@@ -36,4 +36,11 @@ class CampaignController extends Controller {
   $r=$this->campaignService->confirmCampaign((int)$id);
   return response()->json($r,$r['success']?200:422);
  }
+ public function cancel(Request $request,$id) {
+  $campaign=Campaign::with('store')->findOrFail($id);
+  abort_unless($request->user()->role==='admin'||$campaign->store->user_id===$request->user()->id,403);
+  $result=$this->campaignService->cancelCampaign((int)$id);
+  return response()->json($result,$result['success']?200:422);
+ }
+
 }

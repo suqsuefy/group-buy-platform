@@ -30,8 +30,8 @@ class ApiService {
   Future<Map<String, dynamic>> getCampaign(int id) async {
     final r = await _dio.get('/campaigns/$id'); return Map<String, dynamic>.from(r.data);
   }
-  Future<Map<String, dynamic>> joinCampaign({required int id, required String token, int quantity = 1}) async {
-    final r = await _dio.post('/campaigns/$id/join', data: {'quantity': quantity},
+  Future<Map<String, dynamic>> joinCampaign({required int id, required String token, int quantity = 1, required String idempotencyKey}) async {
+    final r = await _dio.post('/campaigns/$id/join', data: {'quantity': quantity, 'idempotency_key': idempotencyKey},
       options: Options(headers: {'Authorization': 'Bearer $token'}));
     return Map<String, dynamic>.from(r.data);
   }

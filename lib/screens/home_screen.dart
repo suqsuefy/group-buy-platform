@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/app_state.dart';
 
 import '../services/api_service.dart';
 
@@ -44,9 +46,16 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () => Navigator.pushNamed(context, '/cart'),
             icon: const Icon(Icons.shopping_cart),
           ),
+          IconButton(tooltip:'مشاركاتي',onPressed:()=>Navigator.pushNamed(context,'/my-campaigns'),icon:const Icon(Icons.groups)),
+          IconButton(tooltip:'طلباتي',onPressed:()=>Navigator.pushNamed(context,'/my-orders'),icon:const Icon(Icons.receipt_long)),
           IconButton(
-            onPressed: () {
-              Navigator.pushReplacementNamed(context, '/');
+            tooltip:'تسجيل الخروج',
+            onPressed: () async {
+              final state=context.read<AppState>();
+              final token=state.token;
+              state.logout();
+              if(mounted) Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+              await _apiService.logout(token);
             },
             icon: const Icon(Icons.logout),
           ),

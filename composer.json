@@ -1,10 +1,10 @@
 {
   "name": "suqsuefy/group-buy-platform",
-  "description": "Group buying marketplace MVP for Egypt",
+  "description": "Group buying MVP (Laravel 12) for Egypt",
   "type": "project",
   "require": {
     "php": "^8.2",
-    "laravel/framework": "^11.0",
+    "laravel/framework": "^12.0",
     "laravel/sanctum": "^4.0",
     "nunomaduro/collision": "^8.0"
   },

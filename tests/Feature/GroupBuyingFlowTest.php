@@ -206,6 +206,46 @@ class GroupBuyingFlowTest extends TestCase
         $this->actingAs($customer, 'sanctum')->getJson('/api/orders/my')->assertOk()->assertJsonCount(1);
     }
 
+
+    public function test_two_campaigns_cannot_reserve_more_than_shared_product_stock(): void
+    {
+        $f = $this->fixture(stock: 3, minimum: 2, target: 3);
+        $other = Campaign::create([
+            'store_id' => $f['store']->id, 'product_id' => $f['product']->id,
+            'title' => 'Second Campaign', 'regular_price' => 100, 'group_price' => 75,
+            'min_participants' => 2, 'target_participants' => 3,
+            'current_participants' => 0, 'start_at' => now()->subHour(),
+            'end_at' => now()->addDay(), 'status' => 'active',
+        ]);
+        $this->join($this->user(), $f['campaign'], 2)->assertOk();
+        $this->join($this->user(), $other, 2)->assertUnprocessable();
+        $this->join($this->user(), $other, 1)->assertOk();
+        $this->assertDatabaseCount('campaign_participants', 2);
+    }
+
+    public function test_checkout_reduces_physical_stock_without_double_counting_ordered_units(): void
+    {
+        $f = $this->fixture(stock: 4, minimum: 2, target: 4);
+        $first = $this->user();
+        $second = $this->user();
+        $this->join($first, $f['campaign'], 2)->assertOk();
+        $this->join($second, $f['campaign'], 1)->assertOk();
+        $this->actingAs($f['seller'], 'sanctum')
+            ->postJson('/api/campaigns/'.$f['campaign']->id.'/confirm')->assertOk();
+        $this->actingAs($first, 'sanctum')->postJson('/api/orders', [
+            'campaign_id'=>$f['campaign']->id,
+            'address_id'=>$this->address($first)->id,
+            'payment_method'=>'cash_on_delivery',
+        ])->assertCreated();
+        $this->assertSame(2, (int) $f['product']->fresh()->stock);
+        $this->actingAs($second, 'sanctum')->postJson('/api/orders', [
+            'campaign_id'=>$f['campaign']->id,
+            'address_id'=>$this->address($second)->id,
+            'payment_method'=>'cash_on_delivery',
+        ])->assertCreated();
+        $this->assertSame(1, (int) $f['product']->fresh()->stock);
+    }
+
     public function test_more_than_available_stock_cannot_be_purchased(): void
     {
         $f = $this->fixture();

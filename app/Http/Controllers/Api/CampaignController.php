@@ -25,6 +25,22 @@ class CampaignController extends Controller {
   $c=Campaign::create([...$d,'status'=>'active','current_participants'=>0]);
   return response()->json(['campaign'=>$c],201);
  }
+ public function myCampaigns(Request $request) {
+  $user=$request->user();
+  $campaigns=Campaign::with(['store','product'])
+    ->whereHas('participants',fn($q)=>$q->where('user_id',$user->id)->where('status','joined'))
+    ->latest()->get();
+  $participants=\App\Models\CampaignParticipant::where('user_id',$user->id)
+    ->where('status','joined')->whereIn('campaign_id',$campaigns->pluck('id'))
+    ->get()->keyBy('campaign_id');
+  $orders=\App\Models\Order::where('user_id',$user->id)
+    ->whereIn('campaign_id',$campaigns->pluck('id'))->get()->keyBy('campaign_id');
+  return response()->json($campaigns->map(fn($c)=>[
+    'campaign'=>$c,
+    'quantity'=>$participants->get($c->id)?->quantity ?? 0,
+    'order'=>$orders->get($c->id),
+  ]));
+ }
  public function join(Request $request,$id) {
   $d=$request->validate(['quantity'=>'nullable|integer|min:1','idempotency_key'=>'nullable|string|min:8|max:100|regex:/^[A-Za-z0-9_-]+$/']);
   $r=$this->campaignService->joinCampaign((int)$id,$request->user()->id,(int)($d['quantity']??1),$d['idempotency_key']??null);

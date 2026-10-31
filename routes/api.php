@@ -25,6 +25,7 @@ Route::middleware('auth:sanctum')->group(function(){
  Route::post('/campaigns',[CampaignController::class,'store']);
  Route::post('/campaigns/{id}/join',[CampaignController::class,'join']);
  Route::post('/campaigns/{id}/confirm',[CampaignController::class,'confirm']);
+ Route::post('/campaigns/{id}/cancel',[CampaignController::class,'cancel']);
  Route::post('/orders',[OrderController::class,'store']);
  Route::get('/orders/my',[OrderController::class,'myOrders']);
  Route::middleware('admin')->group(function(){

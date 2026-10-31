@@ -19,4 +19,6 @@ Route::middleware(['auth:web', \App\Http\Middleware\EnsureDashboardAccess::class
     Route::post('/dashboard/logout', [DashboardController::class, 'logout'])->name('dashboard.logout');
     Route::post('/dashboard/orders/{order}/transition', [DashboardController::class, 'transition'])->name('dashboard.orders.transition');
     Route::post('/dashboard/orders/{order}/collect', [DashboardController::class, 'collect'])->name('dashboard.orders.collect');
+    Route::post('/dashboard/stores/{store}/moderate', [DashboardController::class, 'moderateStore'])->name('dashboard.stores.moderate');
+    Route::post('/dashboard/products/{product}/moderate', [DashboardController::class, 'moderateProduct'])->name('dashboard.products.moderate');
 });

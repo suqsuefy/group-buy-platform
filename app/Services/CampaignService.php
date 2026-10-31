@@ -4,6 +4,8 @@ use App\Models\Campaign;
 use App\Models\CampaignParticipant;
 use Illuminate\Support\Facades\DB;
 class CampaignService {
+ public function __construct(private ProductInventoryService $inventory) {}
+
  public function joinCampaign(int $campaignId,int $userId,int $quantity=1,?string $idempotencyKey=null):array {
   return DB::transaction(function()use($campaignId,$userId,$quantity,$idempotencyKey){
    if ($idempotencyKey !== null) {
@@ -13,6 +15,9 @@ class CampaignService {
      return ['success'=>true,'message'=>'Previously joined (retry)','replayed'=>true];
     }
    }
+   $productId=Campaign::whereKey($campaignId)->value('product_id');
+   if (!$productId) abort(404);
+   $product=\App\Models\Product::whereKey($productId)->lockForUpdate()->firstOrFail();
    $c=Campaign::whereKey($campaignId)->lockForUpdate()->firstOrFail();
    if($c->status!=='active'||now()->lt($c->start_at)||now()->gte($c->end_at))
     return ['success'=>false,'message'=>'Campaign is not open'];
@@ -21,7 +26,7 @@ class CampaignService {
    if($p && $p->status==='cancelled') $p->quantity=0;
    $count=$c->participants()->where('status','joined')->where('user_id','!=',$userId)->count();
    $totalUnits=(int)$c->participants()->where('status','joined')->where('user_id','!=',$userId)->sum('quantity')+($p?$p->quantity:0)+$quantity;
-   if($count+1>$c->target_participants || $totalUnits>$c->product->stock)
+   if($count+1>$c->target_participants || $this->inventory->outstandingJoinedUnits($product->id)+$quantity>$product->stock)
     return ['success'=>false,'message'=>'Campaign capacity or stock exceeded'];
    if(!$p) $p=new CampaignParticipant(['campaign_id'=>$campaignId,'user_id'=>$userId,'quantity'=>0]);
    $p->quantity+=$quantity;$p->status='joined';$p->save();

@@ -117,7 +117,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                     pendingJoinKey ??= _newJoinKey();
                   });
                   try {
-                    final result = await _apiService.joinCampaign(
+                    await _apiService.joinCampaign(
                       id: widget.campaignId,
                       token: appState.token,
                       quantity: 1,

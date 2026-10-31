@@ -29,6 +29,7 @@ class GroupBuyingApp extends StatelessWidget {
         '/checkout': (context) => const CheckoutScreen(),
         '/my-campaigns': (context) => const MyCampaignsScreen(),
         '/my-orders': (context) => const MyOrdersScreen(),
+        '/server-settings': (context) => const ServerSettingsScreen(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/campaign') {

@@ -109,6 +109,31 @@ class GroupBuyingFlowTest extends TestCase
         $this->assertSame(1, (int) $f['campaign']->fresh()->current_participants);
     }
 
+    public function test_join_retry_with_same_key_does_not_add_quantity_twice(): void
+    {
+        $f = $this->fixture();
+        $customer = $this->user();
+        $url = '/api/campaigns/'.$f['campaign']->id.'/join';
+        $data = ['quantity' => 2, 'idempotency_key' => 'retry-customer-001'];
+
+        $this->actingAs($customer, 'sanctum')->postJson($url, $data)->assertOk();
+        $this->actingAs($customer, 'sanctum')->postJson($url, $data)
+            ->assertOk()->assertJsonPath('replayed', true);
+        $this->assertDatabaseHas('campaign_participants', [
+            'campaign_id' => $f['campaign']->id, 'user_id' => $customer->id, 'quantity' => 2,
+        ]);
+        $this->assertDatabaseCount('campaign_join_requests', 1);
+        $this->actingAs($customer, 'sanctum')->postJson($url, [
+            'quantity' => 3, 'idempotency_key' => 'retry-customer-001',
+        ])->assertUnprocessable();
+        $this->actingAs($customer, 'sanctum')->postJson($url, [
+            'quantity' => 1, 'idempotency_key' => 'new-request-002',
+        ])->assertOk();
+        $this->assertDatabaseHas('campaign_participants', [
+            'campaign_id' => $f['campaign']->id, 'user_id' => $customer->id, 'quantity' => 3,
+        ]);
+    }
+
     public function test_target_and_stock_are_enforced(): void
     {
         $f = $this->fixture(stock: 2, minimum: 2, target: 2);

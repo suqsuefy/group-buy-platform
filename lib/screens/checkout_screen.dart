@@ -17,10 +17,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
  final area=TextEditingController();
  final phone=TextEditingController();
  @override void initState(){super.initState();_load();}
- Future<void> _load()async{
+ Future<void> _load({int? preferredId})async{
   try{final result=await api.getAddresses(context.read<AppState>().token);
    if(!mounted)return;
-   setState((){addresses=result;addressId=result.isNotEmpty?result.first['id'] as int:null;});
+   setState((){addresses=result;addressId=result.isEmpty?null:(preferredId??addressId??result.first['id'] as int);});
   }catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('$e')));}
  }
  Future<void> _addAddress()async{
@@ -28,7 +28,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
    final result=await api.addAddress(token:context.read<AppState>().token,title:title.text,city:city.text,area:area.text,phone:phone.text);
    if(!mounted)return;
    setState(()=>addressId=result['address']['id'] as int);
-   await _load();
+   await _load(preferredId: result['address']['id'] as int);
   }catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('$e')));}
  }
  Future<void> _order()async{

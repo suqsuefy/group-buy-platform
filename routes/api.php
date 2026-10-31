@@ -18,6 +18,7 @@ Route::get('/campaigns/{id}',[CampaignController::class,'show']);
 Route::middleware('auth:sanctum')->group(function(){
  Route::get('/user',fn(Request $request)=>$request->user());
  Route::post('/logout',[AuthController::class,'logout']);
+ Route::get('/my/campaigns',[CampaignController::class,'myCampaigns']);
  Route::get('/addresses',[AddressController::class,'index']);
  Route::post('/addresses',[AddressController::class,'store']);
  Route::post('/stores',[StoreController::class,'store']);
